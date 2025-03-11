@@ -2,7 +2,6 @@ const dotenv = require('dotenv')
 const express = require('express')
 const apiRouter = require('./routes/apiRouter')
 const bodyParser = require('body-parser')
-const mongoose = require('mongoose')
 const path = require('path')
 
 const app = express()
@@ -24,8 +23,6 @@ if (process.env.ENV === 'dev') {
 const PORT = process.env.PORT || 3000
 
 app.use(bodyParser.json());
-
-mongoose.connect('mongodb://localhost:27017/app_db');
 
 app.use('/api', apiRouter)
 

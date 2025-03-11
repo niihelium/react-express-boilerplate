@@ -1,4 +1,4 @@
-const Note = require('../models/note');
+const Note = require('../models/noteModel');
 
 // Fetch all notes for authenticated user
 const getNotes = async (req, res) => {
