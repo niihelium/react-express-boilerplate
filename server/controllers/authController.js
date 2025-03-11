@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
 
 const registerUser = async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
 
     // Validate input
     if (!username || !password) {
@@ -11,7 +11,7 @@ const registerUser = async (req, res) => {
     }
 
     // prevent duplicate username
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findByEmail({ username });
     if (existingUser) {
         return res.status(400).json({ message: 'Username already exists' });
     }
@@ -20,21 +20,30 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create and save new user
-    const newUser = new User({ username, password: hashedPassword });
-    await newUser.save();
-
-    res.status(201).json({ message: 'User registered successfully' });
+    try {
+        const newUserId = await User.create(username, email, hashedPassword);
+        res.status(201).json({ message: 'User registered successfully', id: newUserId });
+    } catch (error) {
+        console.error('Error creating user:', error);
+        return res.status(500).json({ message: 'Error creating user' });
+    }
 };
+
 const loginUser = async (req, res) => {
-    const { username, password } = req.body;
+    const { username, email, password } = req.body;
   
     // Validate input
-    if (!username || !password) {
-        return res.status(400).json({ message: 'Missing username or password' });
+    if ((!username && !email) || !password) {
+        return res.status(400).json({ message: 'Missing username/email or password' });
     }
 
     // Find user
-    const user = await User.findOne({ username });
+    let user;
+    if (email) {
+        user = await User.findByEmail(email);
+    } else {
+        user = await User.findByUsername(username);
+    }
     if (!user) return res.status(404).json({ message: 'User not found' });
   
     // Compare password
@@ -42,7 +51,7 @@ const loginUser = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
   
     // Generate JWT
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
     
     res.json({ token });
   };
