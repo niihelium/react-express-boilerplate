@@ -2,16 +2,25 @@ const Note = require('../models/noteModel');
 
 // Fetch all notes for authenticated user
 const getNotes = async (req, res) => {
-  const notes = await Note.find({ userId: req.userId });
-  res.json(notes);
+  try {
+      console.log(req);
+      const notes = await Note.findAll(req.user_id);
+      res.json(notes);
+  } catch (error) {
+      res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
 };
 
 // Create a new note
 const createNote = async (req, res) => {
   const { title, content } = req.body;
-  const newNote = new Note({ userId: req.userId, title, content });
-  await newNote.save();
-  res.status(201).json(newNote);
+  try {
+      const noteId = await Note.create(title, content, req.userId);
+      const newNote = { id: noteId, title, content, userId: req.userId };
+      res.status(201).json(newNote);
+  } catch (error) {
+      res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
 };
 
 /**
@@ -22,38 +31,49 @@ const createNote = async (req, res) => {
  * @returns {boolean} - Returns true if the note's userId does not match the request's userId.
  */
 const isWrongUser = (note, req) => {
-  return note.userId.toString() !== req.userId;
+  return note.user_id !== req.userId;
 };
 
 // Fetch a single note by ID
 const getNoteById = async (req, res) => {
-  const note = await Note.findById(req.params.id);
-  if (!note || isWrongUser(note, req)) {
-    return res.status(404).json({ message: 'Note not found' });
+  try {
+      const note = await Note.findById(req.params.id);
+      if (!note || isWrongUser(note, req)) {
+          return res.status(404).json({ message: 'Note not found' });
+      }
+      res.json(note);
+  } catch (error) {
+      res.status(500).json({ message: 'Internal server error', error: error.message });
   }
-  res.json(note);
 };
 
 // Update a note by ID
 const updateNote = async (req, res) => {
-  const note = await Note.findById(req.params.id);
-  if (!note || isWrongUser(note, req)) {
-    return res.status(404).json({ message: 'Note not found' });
+  try {
+      const note = await Note.findById(req.params.id);
+      if (!note || isWrongUser(note, req)) {
+          return res.status(404).json({ message: 'Note not found' });
+      }
+      await Note.update(req.params.id, req.body.title || note.title, req.body.content || note.content);
+      const updatedNote = { ...note, title: req.body.title || note.title, content: req.body.content || note.content };
+      res.json(updatedNote);
+  } catch (error) {
+      res.status(500).json({ message: 'Internal server error', error: error.message });
   }
-  note.title = req.body.title || note.title;
-  note.content = req.body.content || note.content;
-  await note.save();
-  res.json(note);
 };
 
 // Delete a note by ID
 const deleteNote = async (req, res) => {
-  const note = await Note.findById(req.params.id);
-  if (!note || isWrongUser(note, req)) {
-    return res.status(404).json({ message: 'Note not found' });
+  try {
+      const note = await Note.findById(req.params.id);
+      if (!note || isWrongUser(note, req)) {
+          return res.status(404).json({ message: 'Note not found' });
+      }
+      await Note.delete(req.params.id);
+      res.json({ message: 'Note deleted successfully' });
+  } catch (error) {
+      res.status(500).json({ message: 'Internal server error', error: error.message });
   }
-  await note.deleteOne();
-  res.json({ message: 'Note deleted successfully' });
 };
 
 module.exports = { getNotes, createNote, getNoteById, updateNote, deleteNote };

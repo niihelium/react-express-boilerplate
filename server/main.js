@@ -12,7 +12,6 @@ const corsOptions = {
   origin: 'http://localhost:5173',
 }
 
-
 app.use(express.static(path.join(__dirname, '../dist')))
 
 if (process.env.ENV === 'dev') {
