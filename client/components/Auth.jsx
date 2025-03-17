@@ -1,61 +1,34 @@
 import React, { useState } from 'react';
-import { registerUser, loginUser } from '../api';
+import Login from './Login';
+import Register from './Register';
 
 const Auth = ({ onLogin }) => {
-  const [isLogin, setIsLogin] = useState(true);  // Switch between login/register
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [isLogin, setIsLogin] = useState(true); // Switch between login/register
+  const [error, setError] = useState(''); // Centralized error state
 
-  // Mock credentials
-  const mockUsername = 'user';
-  const mockPassword = 'password';
+  // Callback function to handle errors from child components
+  const handleError = (errorMessage) => {
+    setError(errorMessage);
+  };
 
-  const handleSubmit = async e => {
-    e.preventDefault();
-    try {
-      if (isLogin) {
-        const { data } = await loginUser(username, password);
-        localStorage.setItem('token', data.token);
-        onLogin();
-      } else {
-        await registerUser(username, password);
-        alert('User registered successfully');
-      }
-    } catch (err) {
-      setError('Error: ' + err.response?.data?.message || 'Something went wrong');
-    }
+  const toggleAuthMode = () => {
+    setIsLogin((prev) => !prev); // Toggle between Login and Register
+    setError(''); // Clear error message
   };
 
   return (
-    <div style={styles.authContainer}>
-      <h2 style={styles.authHeader}>{isLogin ? 'Login' : 'Register'}</h2>
-      {error && <p style={styles.error}>{error}</p>}
-      <form onSubmit={handleSubmit} style={styles.authForm}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={e => setUsername(e.target.value)}
-          required
-          style={styles.input}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          style={styles.input}
-        />
-        <button type="submit" style={styles.button}>
-          {isLogin ? 'Login' : 'Register'}
+      <div style={styles.authContainer}>
+        <h2 style={styles.authHeader}>{isLogin ? 'Login' : 'Register'}</h2>
+        {error && <p style={styles.error}>{error}</p>} {/* Display error */}
+        {isLogin ? (
+            <Login onLogin={onLogin} onError={handleError} />
+        ) : (
+            <Register onRegister={() => alert('User registered successfully')} onError={handleError} />
+        )}
+        <button onClick={toggleAuthMode} style={styles.toggleButton}>
+          {isLogin ? 'Switch to Register' : 'Switch to Login'}
         </button>
-      </form>
-      <button onClick={() => setIsLogin(!isLogin)} style={styles.toggleButton}>
-        {isLogin ? 'Switch to Register' : 'Switch to Login'}
-      </button>
-    </div>
+      </div>
   );
 };
 
@@ -71,27 +44,6 @@ const styles = {
   authHeader: {
     marginBottom: '20px',
     color: '#f5f5f5',
-  },
-  authForm: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-  },
-  input: {
-    padding: '10px',
-    borderRadius: '4px',
-    border: '1px solid #444',
-    backgroundColor: '#333',
-    color: '#f5f5f5',
-    outline: 'none',
-  },
-  button: {
-    padding: '10px',
-    borderRadius: '4px',
-    border: 'none',
-    backgroundColor: '#4CAF50',
-    color: '#fff',
-    cursor: 'pointer',
   },
   toggleButton: {
     marginTop: '10px',
