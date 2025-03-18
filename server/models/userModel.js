@@ -16,9 +16,10 @@ const User = {
         return rows[0];
     },
     async findByEmail(email) {
-        const query = 'SELECT * FROM users WHERE email = ?';
+        const query = "SELECT * FROM users WHERE email = ?";
         try {
             const rows = await pool.query(query, [email]);
+            console.log('Rows:', rows); // Log the rows returned
             return rows[0];
         } catch (error) {
             console.error('Error finding user by email:', error);

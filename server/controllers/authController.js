@@ -11,7 +11,7 @@ const registerUser = async (req, res) => {
     }
 
     // prevent duplicate username
-    const existingUser = await User.findByEmail({ email });
+    const existingUser = await User.findByEmail(email);
     if (existingUser) {
         return res.status(400).json({ message: 'Username already exists' });
     }
