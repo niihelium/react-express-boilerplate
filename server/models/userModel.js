@@ -17,8 +17,13 @@ const User = {
     },
     async findByEmail(email) {
         const query = 'SELECT * FROM users WHERE email = ?';
-        const rows = await pool.query(query, [email]);
-        return rows[0];
+        try {
+            const rows = await pool.query(query, [email]);
+            return rows[0];
+        } catch (error) {
+            console.error('Error finding user by email:', error);
+            throw error;
+        }
     },
     async findAll() {
         const query = 'SELECT id, username, email, role, created_at FROM users';

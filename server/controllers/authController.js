@@ -6,12 +6,12 @@ const registerUser = async (req, res) => {
     const { username, password, email } = req.body;
 
     // Validate input
-    if (!username || !password) {
-        return res.status(400).json({ message: 'Missing username or password' });
+    if (!username || !password || !email) {
+        return res.status(400).json({ message: 'Missing email, username or password' });
     }
 
     // prevent duplicate username
-    const existingUser = await User.findByEmail({ username });
+    const existingUser = await User.findByEmail({ email });
     if (existingUser) {
         return res.status(400).json({ message: 'Username already exists' });
     }
@@ -22,7 +22,7 @@ const registerUser = async (req, res) => {
     // Create and save new user
     try {
         const newUserId = await User.create(username, email, hashedPassword);
-        res.status(201).json({ message: 'User registered successfully', id: newUserId });
+        res.status(200).json({ message: 'User registered successfully', id: newUserId });
     } catch (error) {
         console.error('Error creating user:', error);
         return res.status(500).json({ message: 'Error creating user' });
@@ -30,16 +30,16 @@ const registerUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, password } = req.body;
   
     // Validate input
-    if ((!username && !email) || !password) {
+    if (!username || !password) {
         return res.status(400).json({ message: 'Missing username/email or password' });
     }
 
     // Find user
     let user;
-    if (email) {
+    if (username.includes('@')) {
         user = await User.findByEmail(email);
     } else {
         user = await User.findByUsername(username);
